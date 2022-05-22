@@ -1,7 +1,7 @@
 # Blazor components
 
 ## 1. Color picker
-  Preview of this component is available live at http://components.ragingpixel.pl/
+  Preview of this component is available live at https://components.ragingpixel.pl/
   
   It's possible to select color in both rgb and hsv. 
   
