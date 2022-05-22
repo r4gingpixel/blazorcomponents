@@ -1,4 +1,7 @@
-﻿@inherits ComponentBase
+﻿@inject Components.ComponentsJSInterop js
+@using Microsoft.JSInterop;
+@inject IJSRuntime JSRuntime
+@inherits ComponentBase
 
 <div class="row">
 	<div class="col-3">
@@ -95,7 +98,7 @@
 	{
 		_displaySlidersRGB = !_displaySlidersRGB;		
 		StateHasChanged();
-		
+
 		return _displaySlidersRGB;
 	}
 
@@ -158,7 +161,7 @@
 			_b = Math.Max(0,Math.Min(255,value));
 		}
 	}
-	
+
 	private bool _displaySlidersHSV { get; set; } = false;
 	private bool _displaySlidersRGB { get; set; } = false;
 
@@ -184,11 +187,12 @@
 
 		return $"#{r:X2}{g:X2}{b:X2}";
 	}
-	
-	private async Task CopyTextToClipboard()
-    {
-        //await JSRuntime.InvokeVoidAsync("clipboardCopy.copyText", _selectedColorHex);
-    }
+
+	private async Task<bool> CopyTextToClipboard()
+	{
+		await js.CopyToClipboard(_selectedColorHex, JSRuntime);
+		return true;
+	}
 
 
 	private (float,float,float) GetColorFromMousePosition(MouseEventArgs e)

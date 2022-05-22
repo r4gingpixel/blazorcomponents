@@ -4,3 +4,14 @@
 export function showPrompt(message) {
   return prompt(message, 'Type anything here');
 }
+
+export function CopyText (text) {
+    navigator.clipboard.writeText(text).then(function () {
+        
+    })
+        .catch(function (error) {
+            console.log(error);
+            
+        });
+    return true;
+}
