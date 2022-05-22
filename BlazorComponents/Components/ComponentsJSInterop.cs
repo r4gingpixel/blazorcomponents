@@ -14,7 +14,7 @@ namespace Components
         private Lazy<Task<IJSObjectReference>>? moduleTask;        
         private bool _runtimeSet = false;
 
-        private bool init(IJSRuntime jsRuntime)
+        public ComponentsJSInterop(IJSRuntime jsRuntime)
         {
             if (_runtimeSet == false)
             {
@@ -22,13 +22,12 @@ namespace Components
                 moduleTask = new(() => jsRuntime.InvokeAsync<IJSObjectReference>(
                 "import", "./_content/Components/JsInterop.js").AsTask());
                 _runtimeSet = true;
-            }
-            return true;
+            }            
         }
 
-        public async ValueTask<string> Prompt(string message, IJSRuntime jsRuntime)
+        public async ValueTask<string> Prompt(string message)
         {
-            init(jsRuntime);
+            //init(jsRuntime);
             
             if (moduleTask == null)
             {
@@ -39,9 +38,9 @@ namespace Components
             return await module.InvokeAsync<string>("showPrompt", message);
         }
 
-        public async ValueTask<bool> CopyToClipboard(string text, IJSRuntime jsRuntime)
+        public async ValueTask<bool> CopyToClipboard(string text)
         {
-            init(jsRuntime);
+            //init(jsRuntime);
             if (moduleTask == null)
             {
                 return false;

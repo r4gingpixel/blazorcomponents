@@ -1,6 +1,4 @@
 ﻿@inject Components.ComponentsJSInterop js
-@using Microsoft.JSInterop;
-@inject IJSRuntime JSRuntime
 @inherits ComponentBase
 
 <div class="row">
@@ -190,7 +188,7 @@
 
 	private async Task<bool> CopyTextToClipboard()
 	{
-		await js.CopyToClipboard(_selectedColorHex, JSRuntime);
+		await js.CopyToClipboard(_selectedColorHex);
 		return true;
 	}
 
