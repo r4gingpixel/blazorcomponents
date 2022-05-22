@@ -1,0 +1,33 @@
+﻿@inherits ComponentBase
+
+<div class="mt-1"><span class="fs-5">@Label&nbsp;</span><input type="range" @bind-value="Value" @bind-value:event="oninput" min="@MinValue" max="@MaxValue" /><input type="text" @bind="Value" /><br/></div>
+
+@code {
+
+	private float _value;
+
+	[Parameter]
+	public Func<float, float> onValueChanged { set; get; } = (v) => v;
+	[Parameter]
+	public string Label { get; set; } = "";
+	[Parameter]
+	public float Value
+	{
+		get
+		{
+			return _value;
+		}
+		set
+		{
+			_value = Math.Clamp(value, MinValue, MaxValue);
+
+			onValueChanged(_value);				
+			
+		}
+	}
+	[Parameter]
+	public float MinValue { get; set; }
+	[Parameter]
+	public float MaxValue { get; set; }
+
+}

@@ -1,0 +1,267 @@
+﻿@inherits ComponentBase
+
+<div class="row">
+	<div class="col-3">
+		<div class="colorImgSrc m-2 @colorImgSrcCls" @onmousemove="HandleMouseMove" @onclick="HandleMouseClick" @onmouseout="(()=>_displayCurrentColor=false)" @onmouseover="(()=>_displayCurrentColor=true)">
+			@if (option == ShowOptions.STANDARD)
+			{
+				<img src="_content/Components/images/hsv.png" alt="colors" />
+			}
+			else
+			{
+				<img src="_content/Components/images/hsv_circle.png" alt="colors" />	
+			}
+			
+		</div>
+		<div class="selectedColorContainer p-3">
+			<div style="background-color: @_colorRGB;@_currentColorExtraStyle" id="colorIndicatorDynamic">
+	
+			</div>
+
+			<div style="background-color: @_selectedColor;" id="colorIndicator">
+	
+			</div>
+		
+			<input type="text" value="@_selectedColorHex" class="hexcolor"/>&nbsp;
+			<input type="checkbox" @bind="_displaySlidersHSV" /><span @onclick="@(()=>toggleHSV())">hsv</span>&nbsp;
+			<input type="checkbox" @bind="_displaySlidersRGB" /><span @onclick="@(()=>toggleRGB())">rgb</span>&nbsp;
+			<button class="btn btn-primary" @onclick="CopyTextToClipboard"> Copy</button>
+		</div>
+		
+		<div class="dropdown mt-5">
+		<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+			@captions[option]
+		</button>
+		<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+		@foreach (var value in (ShowOptions[])Enum.GetValues(typeof(ShowOptions)))
+		{
+			<li><a class="dropdown-item" href="javascript:" @onclick="(()=>option = value)">@captions[value]</a></li>
+		}		
+		</ul>
+	</div>
+	
+		@if (_displaySlidersRGB){
+			<div class="form-group border p-2">
+
+				<ColorPart Label="R" Value="r" MaxValue="255" MinValue="0" onValueChanged="@((v1)=>OnValueChangedRGB(ref _r,v1))"/>
+				<ColorPart Label="G" Value="g" MaxValue="255" MinValue="0" onValueChanged="@((v1)=>OnValueChangedRGB(ref _g,v1))"/>
+				<ColorPart Label="B" Value="b" MaxValue="255" MinValue="0" onValueChanged="@((v1)=>OnValueChangedRGB(ref _b,v1))"/>
+			</div>
+		}
+		@if (_displaySlidersHSV){
+			<div class="form-group border p-2">
+				<ColorPart Label="H" Value="_h" MaxValue="360" MinValue="0" onValueChanged="@((v1)=>_updateRGB(v1,_s,_v))"/>
+				<ColorPart Label="S" Value="_s" MaxValue="100" MinValue="0" onValueChanged="@((v1)=>_updateRGB(_h,v1,_v))"/>
+				<ColorPart Label="V" Value="_v" MaxValue="100" MinValue="0" onValueChanged="@((v1)=>_updateRGB(_h,_s,v1))"/>
+			</div>
+		}
+	</div>
+	
+
+</div>
+@code {
+
+	public enum ShowOptions
+	{
+		STANDARD,
+		CIRCLE,		
+	}
+
+	public ShowOptions option = ShowOptions.CIRCLE;
+
+	private Dictionary<ShowOptions, string> captions = new () {
+		{ShowOptions.STANDARD, "Rectangle" },
+		{ShowOptions.CIRCLE, "Circle" },
+	};
+
+	private string colorImgSrcCls => option == ShowOptions.CIRCLE ? "circle" : "rectangle";
+
+	private float _r = 0;
+	private float _g = 0;
+	private float _b = 0;
+
+	private float _h => (float) Math.Round(rgb2hsv(_r,_g,_b).Item1);
+	private float _s => (float) Math.Round(rgb2hsv(_r, _g, _b).Item2*100f);
+	private float _v => (float) Math.Round(rgb2hsv(_r, _g, _b).Item3*100f);
+
+	private bool toggleHSV ()
+	{
+		_displaySlidersHSV = !_displaySlidersHSV;
+		StateHasChanged();
+		return _displaySlidersHSV;
+	}
+
+	private bool toggleRGB ()
+	{
+		_displaySlidersRGB = !_displaySlidersRGB;		
+		StateHasChanged();
+		
+		return _displaySlidersRGB;
+	}
+
+	private float OnValueChangedRGB(ref float v, float newValue){
+
+		if (v != newValue)
+		{
+			v = newValue;
+			StateHasChanged();
+		}
+		return newValue;
+	}
+
+	private float _updateRGB(float h,float s, float v)
+	{
+		float ret = 0;
+		bool needsUpdate = false;
+
+		float formatV(float v) => (float)Math.Round(v * 255f);
+
+		var (r, g, b) = hsv2rgb(h, s/100f, v/100f);
+		if (_r != formatV(r)){
+			ret = _r;
+			_r = formatV(r);
+			needsUpdate = true;
+		}
+		if (_g != formatV(g)){
+			ret = _g;
+			_g = formatV(g);
+			needsUpdate = true;
+		}
+		if (_b != formatV(b)){
+			ret = _b;
+			_b = formatV(b);
+			needsUpdate = true;
+		}
+
+		if (needsUpdate) 
+			StateHasChanged();
+
+		return ret;
+	}
+
+	private float r { get => _r;
+		set
+		{
+			_r = Math.Max(0,Math.Min(255,value));
+		}
+	}
+	private float g { get => _g;
+		set
+		{
+			_g = Math.Max(0,Math.Min(255,value));
+		}
+	}
+	private float b { 
+		get => _b;
+		set
+		{
+			_b = Math.Max(0,Math.Min(255,value));
+		}
+	}
+	
+	private bool _displaySlidersHSV { get; set; } = false;
+	private bool _displaySlidersRGB { get; set; } = false;
+
+	private bool _displayCurrentColor { get; set;} = false;
+
+	private string _currentColorExtraStyle => _displayCurrentColor == true ? "opacity:1" : "opacity:0";
+
+	private string _colorRGB { get; set; } = "rgba(0,0,0,0)";
+	private int counter { get; set; } = 1;
+	private string _selectedColor => RGBColor((_r/255.0f,_g/255.0f,_b/255f));
+	private string _selectedColorHex => HTMLHexColor(_r,_g,_b);
+
+	private string HTMLHexColor(float r, float g, float b)
+	{
+		return HTMLHexColor((int)r, (int)g, (int)b);
+	}
+
+	private string HTMLHexColor(int r, int g, int b)
+	{
+		r = Math.Clamp(r, 0, 255);
+		g = Math.Clamp(g, 0, 255);
+		b = Math.Clamp(b, 0, 255);
+
+		return $"#{r:X2}{g:X2}{b:X2}";
+	}
+	
+	private async Task CopyTextToClipboard()
+    {
+        //await JSRuntime.InvokeVoidAsync("clipboardCopy.copyText", _selectedColorHex);
+    }
+
+
+	private (float,float,float) GetColorFromMousePosition(MouseEventArgs e)
+	{
+		if (option==ShowOptions.STANDARD)
+			return GetColorFromMousePosition(e.OffsetX, e.OffsetY);	
+		else
+			return GetColorFromCircleMousePosition(e.OffsetX, e.OffsetY);	
+	}
+
+	private (float,float,float) GetColorFromCircleMousePosition(double OffsetX, double OffsetY)
+	{
+		const float W = 300;
+		const float H = 300;
+		int x = (int)OffsetX;
+		int y = (int)OffsetY;
+
+		float h = (float)(Math.Atan2(y - H*0.5f, x - W*0.5)/Math.PI*180);
+		float s = Math.Clamp((float)(Math.Sqrt( (W*0.5f-x)* (W*0.5f-x) + (H*0.5f-y)* (H*0.5f-y)) / (W*0.5)),0f,1f);
+		float v = 0.7f;
+		return hsv2rgb(h, s, v);
+	}
+
+	private (float,float,float) GetColorFromMousePosition(double OffsetX, double OffsetY)
+	{
+		const float W = 300;
+		const float H = 160;
+		int x = (int)OffsetX;
+		int y = (int)OffsetY;
+		float h = (x / W)*360;
+		float s = y / H;
+		float v = 0.7f;
+		return hsv2rgb(h, s, v);
+	}
+
+	private void HandleMouseClick(MouseEventArgs e)
+	{
+		var (r, g, b) =  GetColorFromMousePosition(e);
+		
+		this.r = (float)Math.Round(r * 255);
+		this.g = (float)Math.Round(g * 255);
+		this.b = (float)Math.Round(b * 255);
+		
+	}
+
+	private void HandleMouseMove(MouseEventArgs e){
+		_colorRGB = RGBColor(GetColorFromMousePosition(e));				
+	}
+
+	public string RGBColor((float r,float g,float b) Color)
+	{
+		int R = (int)(Color.r * 255);
+		int G = (int)(Color.g * 255);
+		int B = (int)(Color.b * 255);
+		return $"rgb({R}, {G}, {B})";
+	}
+
+	// input: r,g,b in [0,1], out: h in [0,360) and s,v in [0,1]
+	(float ,float , float ) rgb2hsv(float r,float g, float b) {
+		float v=Math.Max(r,Math.Max(g,b)), c=v-Math.Min(r,Math.Min(g,b));
+		float h = c !=0 ? ((v==r) ? (g-b)/c : ((v==g) ? 2+(b-r)/c : 4+(r-g)/c)): 0; 
+		return (60*(h<0?h+6:h), v!=0 ? c/v : v, v/255f);
+	}
+
+	// input: h in [0,360] and s,v in [0,1] - output: r,g,b in [0,1]
+	(float , float , float) hsv2rgb(float h, float s, float v)
+	{
+		float f (float n){
+			float k = ((n + h / 60) % 6);
+			return v - v * s * Math.Max(Math.Min(k, Math.Min(4 - k, 1)), 0);			
+		};
+		//return (0,0,0);
+		return (f(5.0f),f(3.0f),f(1.0f));       
+		
+	}   
+}
