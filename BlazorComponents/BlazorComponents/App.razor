@@ -1,4 +1,9 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Services
+@inject LazyAssemblyLoader AssemblyLoader
+@inject ILogger<App> Logger
+@inject HttpClient Http
+
+<Router AppAssembly="@typeof(App).Assembly" OnNavigateAsync="@OnNavigateAsync">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
@@ -10,3 +15,32 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    private async Task OnNavigateAsync(NavigationContext args)
+    {
+        try
+        {
+
+            if (args.Path == "dynamicload")
+            {
+                var dllName2 = "_framework/Components.dll";
+                var bytes = await Http.GetByteArrayAsync(dllName2);
+                var assembly = System.Reflection.Assembly.Load(bytes);
+                BlazorComponents.Dynamic.assemblies.Add(assembly);
+                
+                /*
+                 * 
+                 * var t = assembly.GetType("ClassLibrary1.Class1");
+                    var m = t.GetMethod("GetMessage");
+                    Console.WriteLine($"ClassLibrary1.Class1.GetMessage(): {m.Invoke(null, null)}");
+                 * 
+                 */
+            }
+           }
+           catch (Exception ex)
+           {
+               Logger.LogError("Error: {Message}", ex.Message);
+           }
+    }
+}

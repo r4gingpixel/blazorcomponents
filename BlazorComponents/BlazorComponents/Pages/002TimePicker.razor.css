@@ -1,0 +1,12 @@
+﻿::deep .clockContainer {
+	position: relative;
+	width: 300px;
+	height: 300px;
+	overflow: hidden;
+}
+
+	::deep .clockContainer img {
+		position: absolute;
+		left: 0px;
+		top: 0px;
+	}

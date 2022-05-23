@@ -1,0 +1,29 @@
+﻿@page "/dynamicload"
+<h3>_000DynamicLoad</h3>
+
+<ul>
+@foreach (var assembly in BlazorComponents.Dynamic.assemblies){
+	<li>@assembly.FullName
+		<ol>
+				@foreach (var t in @assembly.GetTypes())
+				{
+					<li @onclick="@(()=>Render(t))">@t.FullName</li>
+				}
+			</ol>
+	</li>
+	
+}	
+</ul>
+
+@if (dynamic != null)
+{
+	<DynamicComponent Type="dynamic"></DynamicComponent>
+}
+
+@code {
+	private Type? dynamic = null;
+	public void Render (Type t)
+	{
+		dynamic = t;
+	}
+}

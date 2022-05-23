@@ -3,7 +3,7 @@
 
 <div class="row">
 	<div class="col-3">
-		<div class="colorImgSrc m-2 @colorImgSrcCls" @onmousemove="HandleMouseMove" @onclick="HandleMouseClick" @onmouseout="(()=>_displayCurrentColor=false)" @onmouseover="(()=>_displayCurrentColor=true)">
+		<div class="colorImgSrc m-2 @colorImgSrcCls" style="cursor: @_cursor" @onmousemove="HandleMouseMove" @ondragstart="SelectStart" @ondragstart:preventDefault="true" @onmousedown="(()=>_isMouseDown=true)" @onmouseup="(()=>_isMouseDown=false)" @onclick="HandleMouseClick" @onmouseout="(()=>_displayCurrentColor=false)" @onmouseover="(()=>_displayCurrentColor=true)">
 			@if (option == ShowOptions.STANDARD)
 			{
 				<img src="_content/Components/images/hsv.png" alt="colors" />
@@ -76,7 +76,7 @@
 	};
 
 	private string colorImgSrcCls => option == ShowOptions.CIRCLE ? "circle" : "rectangle";
-
+	private string _cursor => _isMouseDown ? "crosshair" : "pointer";
 	private float _r = 0;
 	private float _g = 0;
 	private float _b = 0;
@@ -84,6 +84,11 @@
 	private float _h => (float) Math.Round(rgb2hsv(_r,_g,_b).Item1);
 	private float _s => (float) Math.Round(rgb2hsv(_r, _g, _b).Item2*100f);
 	private float _v => (float) Math.Round(rgb2hsv(_r, _g, _b).Item3*100f);
+
+	private void SelectStart(DragEventArgs e)
+	{
+
+	}
 
 	private bool toggleHSV ()
 	{
@@ -159,13 +164,13 @@
 			_b = Math.Max(0,Math.Min(255,value));
 		}
 	}
-
+	private bool _isMouseDown { get; set; } = false;
 	private bool _displaySlidersHSV { get; set; } = false;
 	private bool _displaySlidersRGB { get; set; } = false;
 
 	private bool _displayCurrentColor { get; set;} = false;
 
-	private string _currentColorExtraStyle => _displayCurrentColor == true ? "opacity:1" : "opacity:0";
+	private string _currentColorExtraStyle => _displayCurrentColor == true ? _isMouseDown == true ? "opacity:0" : "opacity:1" : "opacity:0";
 
 	private string _colorRGB { get; set; } = "rgba(0,0,0,0)";
 	private int counter { get; set; } = 1;
@@ -229,15 +234,19 @@
 	private void HandleMouseClick(MouseEventArgs e)
 	{
 		var (r, g, b) =  GetColorFromMousePosition(e);
-		
+
 		this.r = (float)Math.Round(r * 255);
 		this.g = (float)Math.Round(g * 255);
 		this.b = (float)Math.Round(b * 255);
-		
+
 	}
 
 	private void HandleMouseMove(MouseEventArgs e){
-		_colorRGB = RGBColor(GetColorFromMousePosition(e));				
+		_colorRGB = RGBColor(GetColorFromMousePosition(e));
+		if (_isMouseDown)
+		{
+			HandleMouseClick(e);
+		}
 	}
 
 	public string RGBColor((float r,float g,float b) Color)
